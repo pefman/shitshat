@@ -25,27 +25,27 @@ A simple real-time chat application built with Go, featuring WebSocket-based com
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/real-time-chat.git
-   cd real-time-chat
+   git clone https://github.com/pefman/shitshat.git
+   cd shitshat
    ```
 
 2. Build the project:
 
    ```bash
-   go build -o chat-app main.go
+   go build -o shitshat main.go
    ```
 
 3. Run the application:
 
    - **Start the server**:
      ```bash
-     ./chat-app --server --address <address> --port <port>
+     ./shitshat --server --address <address> --port <port>
      ```
 
    - **Start the client**:
      Open a new terminal and run:
      ```bash
-     ./chat-app --client --address <address> --port <port>
+     ./shitshat --client --address <address> --port <port>
      ```
 
    - Enter your username when prompted and start chatting!
