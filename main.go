@@ -210,7 +210,7 @@ func startClient(address string, port int) {
 
 func main() {
 	// Define command-line flags
-	address := flag.String("address", "localhost", "Server address")
+	address := flag.String("address", "0.0.0.0", "Server address")
 	port := flag.Int("port", 8080, "Port number")
 	serverMode := flag.Bool("server", false, "Run as server")
 	clientMode := flag.Bool("client", false, "Run as client")
