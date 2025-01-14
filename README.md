@@ -1,4 +1,4 @@
-# Real-Time Chat Application in Go
+# Shitshat a Chat Application in Go
 
 A simple real-time chat application built with Go, featuring WebSocket-based communication. Users can connect to the server via a command-line interface (CLI) and exchange messages in real-time.
 
@@ -16,7 +16,7 @@ A simple real-time chat application built with Go, featuring WebSocket-based com
 
 ## Requirements
 
-- [Go](https://golang.org/doc/install) (1.18 or higher)
+- [Go](https://golang.org/doc/install) (1.23.4 or higher)
 
 ---
 
@@ -27,34 +27,25 @@ A simple real-time chat application built with Go, featuring WebSocket-based com
    ```bash
    git clone https://github.com/your-username/real-time-chat.git
    cd real-time-chat
+   ```
 
 2. Build the project:
 
-   - **Server**:
-     ```bash
-     cd server
-     go build -o chat-server
-     ```
-
-   - **Client**:
-     ```bash
-     cd ../client
-     go build -o chat-client
-     ```
+   ```bash
+   go build -o chat-app main.go
+   ```
 
 3. Run the application:
 
    - **Start the server**:
      ```bash
-     cd server
-     ./chat-server
+     ./chat-app --server --address <address> --port <port>
      ```
 
    - **Start the client**:
      Open a new terminal and run:
      ```bash
-     cd client
-     ./chat-client
+     ./chat-app --client --address <address> --port <port>
      ```
 
    - Enter your username when prompted and start chatting!
@@ -67,3 +58,29 @@ A simple real-time chat application built with Go, featuring WebSocket-based com
    - Use different usernames for each client.
    - Send messages from one client and see them appear in real-time on all connected clients.
    - New clients will receive the last hour's chat history upon connecting.
+
+---
+
+## Docker
+
+You can also build and run the application using Docker.
+
+1. Build the Docker image:
+
+   ```bash
+   ./build_docker_image.sh
+   ```
+
+2. Run the Docker container:
+
+   ```bash
+   docker run -p <port>:<port> shitshat --server --address 0.0.0.0 --port <port>
+   ```
+
+3. Connect clients to the server using the same steps as above, but ensure the address and port match the Docker container settings.
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
