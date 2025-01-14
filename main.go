@@ -52,13 +52,35 @@ func (hub *Hub) Run() {
 		case client := <-hub.register:
 			hub.clients[client] = true
 			hub.sendRecentMessages(client)
+
+			// Broadcast a system message when a new client connects
+			joinMessage := Message{
+				Content:   fmt.Sprintf("%s has joined the chat!", client.username),
+				Username:  "System",
+				Timestamp: time.Now(),
+			}
+			hub.storeMessage(joinMessage) // Optionally store the message
+			hub.broadcastToClients(joinMessage)
+
 			fmt.Printf("New client connected: %s\n", client.username)
+
 		case client := <-hub.unregister:
 			if _, ok := hub.clients[client]; ok {
 				delete(hub.clients, client)
 				close(client.send)
+
+				// Broadcast a system message when a client disconnects
+				leaveMessage := Message{
+					Content:   fmt.Sprintf("%s has left the chat.", client.username),
+					Username:  "System",
+					Timestamp: time.Now(),
+				}
+				hub.storeMessage(leaveMessage) // Optionally store the message
+				hub.broadcastToClients(leaveMessage)
+
 				fmt.Printf("Client disconnected: %s\n", client.username)
 			}
+
 		case message := <-hub.broadcast:
 			hub.storeMessage(message)
 			hub.broadcastToClients(message)
