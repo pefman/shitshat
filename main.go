@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -158,19 +159,19 @@ var upgrader = websocket.Upgrader{
 }
 
 // Client-Side Code
-func startClient() {
+func startClient(address string, port int) {
 	fmt.Print("Enter your username: ")
 	var username string
 	fmt.Scanln(&username)
 
-	serverAddr := "ws://localhost:8080/ws?username=" + username
+	serverAddr := fmt.Sprintf("ws://%s:%d/ws?username=%s", address, port, username)
 	conn, _, err := websocket.DefaultDialer.Dial(serverAddr, nil)
 	if err != nil {
 		log.Fatal("Failed to connect to server:", err)
 	}
 	defer conn.Close()
 
-	fmt.Printf("Connected as '%s'. Type your messages below:\n", username)
+	fmt.Printf("Connected to server at %s as '%s'. Type your messages below:\n", serverAddr, username)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt)
@@ -208,27 +209,34 @@ func startClient() {
 }
 
 func main() {
-	fmt.Println("Choose mode:")
-	fmt.Println("1. Run as server")
-	fmt.Println("2. Run as client")
-	fmt.Print("Enter choice (1/2): ")
+	// Define command-line flags
+	address := flag.String("address", "localhost", "Server address")
+	port := flag.Int("port", 8080, "Port number")
+	serverMode := flag.Bool("server", false, "Run as server")
+	clientMode := flag.Bool("client", false, "Run as client")
 
-	var choice int
-	fmt.Scanln(&choice)
+	// Parse the command-line flags
+	flag.Parse()
 
-	if choice == 1 {
+	if *serverMode {
+		// Run the server
 		hub := NewHub()
 		go hub.Run()
 
+		serverAddr := fmt.Sprintf("%s:%d", *address, *port)
 		http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 			handleConnections(hub, w, r)
 		})
 
-		fmt.Println("Server started on :8080")
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	} else if choice == 2 {
-		startClient()
+		fmt.Printf("Server started on %s\n", serverAddr)
+		log.Fatal(http.ListenAndServe(serverAddr, nil))
+	} else if *clientMode {
+		// Run the client
+		startClient(*address, *port)
 	} else {
-		fmt.Println("Invalid choice. Exiting.")
+		fmt.Println("Error: You must specify --server or --client.")
+		fmt.Println("Usage:")
+		fmt.Println("  Run server: go run main.go --server --address <address> --port <port>")
+		fmt.Println("  Run client: go run main.go --client --address <address> --port <port>")
 	}
 }
