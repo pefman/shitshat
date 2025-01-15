@@ -21,4 +21,4 @@ COPY --from=builder /shitshat/shitshat .
 RUN chmod +x shitshat
 
 # Set default arguments
-CMD ["./shitshat", "--server"]
+ENTRYPOINT ["./shitshat", "--server"]
