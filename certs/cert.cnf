@@ -1,0 +1,19 @@
+[req]
+default_bits       = 2048
+default_md         = sha256
+distinguished_name = dn
+
+[dn]
+C  = US
+ST = State
+L  = City
+O  = Organization
+OU = Organizational Unit
+CN = localhost
+
+[x509_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+IP.1  = 0.0.0.0
