@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,19 +17,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Server-Side Code
+// Message represents a chat message
 type Message struct {
 	Content   string
 	Username  string
 	Timestamp time.Time
 }
 
+// Client represents a connected chat client
 type Client struct {
 	conn     *websocket.Conn
 	send     chan []byte
 	username string
 }
 
+// Hub manages connected clients and message broadcasting
 type Hub struct {
 	clients    map[*Client]bool
 	broadcast  chan Message
@@ -53,13 +58,12 @@ func (hub *Hub) Run() {
 			hub.clients[client] = true
 			hub.sendRecentMessages(client)
 
-			// Broadcast a system message when a new client connects
 			joinMessage := Message{
 				Content:   fmt.Sprintf("%s has joined the chat!", client.username),
 				Username:  "System",
 				Timestamp: time.Now(),
 			}
-			hub.storeMessage(joinMessage) // Optionally store the message
+			hub.storeMessage(joinMessage)
 			hub.broadcastToClients(joinMessage)
 
 			fmt.Printf("New client connected: %s\n", client.username)
@@ -69,13 +73,12 @@ func (hub *Hub) Run() {
 				delete(hub.clients, client)
 				close(client.send)
 
-				// Broadcast a system message when a client disconnects
 				leaveMessage := Message{
 					Content:   fmt.Sprintf("%s has left the chat.", client.username),
 					Username:  "System",
 					Timestamp: time.Now(),
 				}
-				hub.storeMessage(leaveMessage) // Optionally store the message
+				hub.storeMessage(leaveMessage)
 				hub.broadcastToClients(leaveMessage)
 
 				fmt.Printf("Client disconnected: %s\n", client.username)
@@ -180,13 +183,26 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// Client-Side Code
 func startClient(address string, port int) {
 	fmt.Print("Enter your username: ")
 	var username string
 	fmt.Scanln(&username)
 
-	serverAddr := fmt.Sprintf("ws://%s:%d/ws?username=%s", address, port, username)
+	serverAddr := fmt.Sprintf("wss://%s:%d/ws?username=%s", address, port, username)
+
+	// Load the self-signed certificate
+	certPool := x509.NewCertPool()
+	cert, err := ioutil.ReadFile("cert.pem")
+	if err != nil {
+		log.Fatalf("Failed to read certificate: %v", err)
+	}
+	certPool.AppendCertsFromPEM(cert)
+
+	// Configure WebSocket dialer to trust the self-signed certificate
+	websocket.DefaultDialer.TLSClientConfig = &tls.Config{
+		RootCAs: certPool,
+	}
+
 	conn, _, err := websocket.DefaultDialer.Dial(serverAddr, nil)
 	if err != nil {
 		log.Fatal("Failed to connect to server:", err)
@@ -231,17 +247,14 @@ func startClient(address string, port int) {
 }
 
 func main() {
-	// Define command-line flags
 	address := flag.String("address", "0.0.0.0", "Server address")
-	port := flag.Int("port", 8080, "Port number")
+	port := flag.Int("port", 8443, "Port number")
 	serverMode := flag.Bool("server", false, "Run as server")
 	clientMode := flag.Bool("client", false, "Run as client")
 
-	// Parse the command-line flags
 	flag.Parse()
 
 	if *serverMode {
-		// Run the server
 		hub := NewHub()
 		go hub.Run()
 
@@ -250,10 +263,9 @@ func main() {
 			handleConnections(hub, w, r)
 		})
 
-		fmt.Printf("Server started on %s\n", serverAddr)
-		log.Fatal(http.ListenAndServe(serverAddr, nil))
+		fmt.Printf("Server started on %s with HTTPS\n", serverAddr)
+		log.Fatal(http.ListenAndServeTLS(serverAddr, "cert.pem", "key.pem", nil))
 	} else if *clientMode {
-		// Run the client
 		startClient(*address, *port)
 	} else {
 		fmt.Println("Error: You must specify --server or --client.")

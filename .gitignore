@@ -1,2 +1,8 @@
 
 dist/
+certs/cert.pem
+certs/server.crt
+certs/server.key
+certs/server.csr
+key.pem
+cert.pem
