@@ -74,7 +74,7 @@ You can also build and run the application using Docker.
 2. Run the Docker container:
 
    ```bash
-   docker run -p <port>:<port> shitshat --server --address 0.0.0.0 --port <port>
+   docker run -p <port>:<port> shitshat --server --address <ip> --port <port>
    ```
 
 3. Connect clients to the server using the same steps as above, but ensure the address and port match the Docker container settings.
